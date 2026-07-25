@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Music2 } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
@@ -60,11 +59,11 @@ function AuthPage() {
 
   const handleGoogle = async () => {
     setError(null);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/app` },
     });
-    if (result.error) setError(result.error.message ?? "Erro ao entrar com Google");
-    else if (!result.redirected) navigate({ to: "/app" });
+    if (error) setError(error.message ?? "Erro ao entrar com Google");
   };
 
   return (
@@ -133,7 +132,7 @@ function AuthPage() {
         </div>
 
         <p className="text-xs text-muted-foreground text-center mt-4 px-4">
-          Ao criar uma conta, você concorda com nossos termos. Após 2h de teste, o acesso passa a R$ 15/mês.
+          Ao criar uma conta, você concorda com nossos termos. Após 2h de teste, escolha um plano para continuar.
         </p>
       </div>
 
