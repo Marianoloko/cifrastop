@@ -78,7 +78,9 @@ export function useSongs() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<Song> }) => {
-      const dbPatch: Record<string, unknown> = {};
+      const dbPatch: {
+        title?: string; artist?: string; key?: string; capo?: string; body?: string;
+      } = {};
       if (patch.title !== undefined) dbPatch.title = patch.title;
       if (patch.artist !== undefined) dbPatch.artist = patch.artist;
       if (patch.key !== undefined) dbPatch.key = patch.key;
