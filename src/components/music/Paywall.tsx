@@ -1,75 +1,107 @@
-import { CreditCard, QrCode, Lock, LogOut } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Check, MessageSquare, Zap, Star, ShieldCheck } from "lucide-react";
 
 export function Paywall() {
-  const [loading, setLoading] = useState(false);
+  const whatsappNumber = "5598987150431";
 
-  const handleSubscribe = async () => {
-    setLoading(true);
-    // Stripe checkout será conectado quando o plano Pro estiver ativo
-    alert("Pagamento em configuração. Em breve você poderá assinar por PIX ou Cartão.");
-    setLoading(false);
-  };
+  const plans = [
+    {
+      id: "mensal",
+      title: "Plano Mensal",
+      price: "R$ 15,00",
+      period: "por mês",
+      description: "Acesso completo a todas as ferramentas por 30 dias.",
+      badge: "Popular",
+      message: "Olá! Gostaria de assinar o Plano Mensal de R$ 15,00 no CifraStop.",
+    },
+    {
+      id: "diferenciado",
+      title: "Plano Diferenciado",
+      price: "Sob Consulta",
+      period: "3 a 6 meses",
+      description: "Pacotes flexíveis para quem estuda música regularmente.",
+      badge: "Flexível",
+      message: "Olá! Tenho interesse no Plano Diferenciado (3 a 6 meses) no CifraStop. Como funciona?",
+    },
+    {
+      id: "anual",
+      title: "Plano Anual",
+      price: "R$ 120,00",
+      period: "por ano",
+      description: "Melhor custo-benefício! Economia garantida para o ano todo.",
+      badge: "Melhor Valor",
+      featured: true,
+      message: "Olá! Gostaria de aproveitar a promoção e assinar o Plano Anual de R$ 120,00 no CifraStop.",
+    },
+  ];
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/auth";
+  const handleOpenWhatsApp = (message: string) => {
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, "_blank");
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        <div className="rounded-2xl bg-card border border-border shadow-lg p-6 sm:p-8">
-          <div className="h-14 w-14 rounded-2xl bg-amber-soft text-tom flex items-center justify-center mx-auto mb-4">
-            <Lock size={26} />
-          </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-center">Seu teste grátis acabou</h1>
-          <p className="text-sm text-muted-foreground text-center mt-2">
-            Continue com todos os recursos do CifraVocal Pro por apenas
-          </p>
-          <div className="text-center my-5">
-            <div className="text-4xl font-bold chord-mono">R$ 15</div>
-            <div className="text-xs text-muted-foreground">/ mês · cancele quando quiser</div>
-          </div>
+    <div className="py-12 px-4 max-w-6xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl font-extrabold text-foreground sm:text-4xl">Escolha seu Plano de Acesso</h2>
+        <p className="mt-4 text-lg text-muted-foreground">
+          Assine diretamente pelo WhatsApp e libere seu acesso instantaneamente.
+        </p>
+      </div>
 
-          <ul className="space-y-2 text-sm mb-5">
-            <Feature>Repertório sincronizado na nuvem</Feature>
-            <Feature>Transposição de tom em tempo real</Feature>
-            <Feature>Modo Palco com autoscroll</Feature>
-            <Feature>Retorno de áudio, afinador, metrônomo e gravador</Feature>
-          </ul>
-
-          <button
-            onClick={handleSubscribe}
-            disabled={loading}
-            className="w-full rounded-xl bg-tom text-white font-semibold py-3 hover:opacity-95 disabled:opacity-50 transition"
+      <div className="grid md:grid-cols-3 gap-8">
+        {plans.map((plan) => (
+          <Card
+            key={plan.id}
+            className={`relative flex flex-col justify-between border-2 transition-all duration-300 ${
+              plan.featured
+                ? "border-primary shadow-2xl scale-105 bg-primary/5"
+                : "border-border hover:border-primary/50"
+            }`}
           >
-            {loading ? "Aguarde..." : "Assinar agora"}
-          </button>
+            {plan.badge && (
+              <div className="absolute -top-3 right-4 bg-primary text-primary-foreground text-xs px-3 py-1 rounded-full font-bold">
+                {plan.badge}
+              </div>
+            )}
+            <div>
+              <CardHeader>
+                <CardTitle className="text-xl font-bold">{plan.title}</CardTitle>
+                <CardDescription>{plan.description}</CardDescription>
+                <div className="mt-4 flex items-baseline">
+                  <span className="text-4xl font-extrabold text-foreground">{plan.price}</span>
+                  <span className="ml-2 text-muted-foreground text-sm">{plan.period}</span>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Check className="w-4 h-4 text-primary" /> Acesso a cifras ilimitadas
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Check className="w-4 h-4 text-primary" /> Afinador e Metrônomo integrados
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Check className="w-4 h-4 text-primary" /> Gravador e Repertório
+                </div>
+              </CardContent>
+            </div>
 
-          <div className="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1"><QrCode size={14} /> PIX</span>
-            <span className="inline-flex items-center gap-1"><CreditCard size={14} /> Cartão</span>
-          </div>
-        </div>
-
-        <button
-          onClick={handleSignOut}
-          className="w-full mt-4 text-xs text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1"
-        >
-          <LogOut size={12} /> Sair da conta
-        </button>
+            <div className="p-6 pt-0">
+              <Button
+                onClick={() => handleOpenWhatsApp(plan.message)}
+                className={`w-full py-6 font-bold flex items-center justify-center gap-2 ${
+                  plan.featured ? "bg-primary text-primary-foreground" : ""
+                }`}
+                variant={plan.featured ? "default" : "outline"}
+              >
+                <MessageSquare className="w-5 h-5" />
+                Assinar via WhatsApp
+              </Button>
+            </div>
+          </Card>
+        ))}
       </div>
     </div>
-  );
-}
-
-function Feature({ children }: { children: React.ReactNode }) {
-  return (
-    <li className="flex items-start gap-2">
-      <span className="text-tom mt-0.5">✓</span>
-      <span>{children}</span>
-    </li>
   );
 }
