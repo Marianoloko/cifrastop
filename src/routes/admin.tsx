@@ -50,22 +50,22 @@ function AdminPage() {
     setFoundUser(null);
 
     try {
-      // Busca usuário pela tabela de perfis/perfis de usuário
+      // Busca o usuário pelo telefone/WhatsApp cadastrado no perfil
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
-        .eq("email", searchEmail)
-        .single();
+        .select("id, phone, trial_started_at")
+        .eq("phone", searchEmail)
+        .maybeSingle();
 
       if (error || !data) {
         toast({
           variant: "destructive",
-          title: "E-mail não encontrado",
-          description: "Este e-mail ainda não possui cadastro no CifraStop.",
+          title: "Usuário não encontrado",
+          description: "Este telefone ainda não possui cadastro no CifraStop.",
         });
       } else {
         setFoundUser(data);
-        toast({ title: "Usuário encontrado!", description: `E-mail: ${data.email}` });
+        toast({ title: "Usuário encontrado!", description: `Telefone: ${data.phone}` });
       }
     } catch (err: any) {
       toast({ variant: "destructive", title: "Erro na busca", description: err.message });
@@ -82,19 +82,23 @@ function AdminPage() {
 
     try {
       const { error } = await supabase
-        .from("profiles")
-        .update({
-          subscription_ends_at: expirationDate.toISOString(),
-          plan_type: planName,
-        })
-        .eq("id", foundUser.id);
+        .from("subscriptions")
+        .upsert(
+          {
+            user_id: foundUser.id,
+            status: "active",
+            current_period_end: expirationDate.toISOString(),
+          },
+          { onConflict: "user_id" },
+        );
 
       if (error) throw error;
 
       toast({
         title: "Plano Ativado com Sucesso!",
-        description: `O ${planName} foi liberado para ${foundUser.email} até ${expirationDate.toLocaleDateString()}.`,
+        description: `O ${planName} foi liberado para ${foundUser.phone} até ${expirationDate.toLocaleDateString()}.`,
       });
+
     } catch (err: any) {
       toast({ variant: "destructive", title: "Erro ao ativar plano", description: err.message });
     }
