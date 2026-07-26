@@ -1,3 +1,4 @@
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,23 @@ import { Label } from "@/components/ui/label";
 import { ShieldAlert, CheckCircle, Search, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-export default function AdminPage() {
+export const Route = createFileRoute("/admin")({
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Painel administrativo · CifraStop" },
+      { name: "description", content: "Área restrita para gerenciar assinaturas e acessos dos usuários do CifraStop." },
+      { property: "og:title", content: "Painel administrativo · CifraStop" },
+      { property: "og:description", content: "Área restrita de gestão de assinaturas do CifraStop." },
+      { name: "robots", content: "noindex" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: AdminPage,
+});
+
+function AdminPage() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [adminUser, setAdminUser] = useState("");
   const [adminPass, setAdminPass] = useState("");
