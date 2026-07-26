@@ -140,12 +140,12 @@ function AdminPage() {
 
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle>Buscar Cliente por E-mail</CardTitle>
-          <CardDescription>Digite o e-mail do usuário cadastrado para liberar o acesso</CardDescription>
+          <CardTitle>Buscar Cliente por Telefone</CardTitle>
+          <CardDescription>Digite o telefone/WhatsApp informado no cadastro para liberar o acesso</CardDescription>
         </CardHeader>
         <CardContent className="flex gap-4">
           <Input
-            placeholder="cliente@email.com"
+            placeholder="(98) 98715-0431"
             value={searchEmail}
             onChange={(e) => setSearchEmail(e.target.value)}
           />
@@ -162,7 +162,7 @@ function AdminPage() {
             <CardTitle className="flex items-center gap-2">
               <UserCheck className="text-primary" /> Usuário Selecionado
             </CardTitle>
-            <CardDescription>{foundUser.email}</CardDescription>
+            <CardDescription>{foundUser.phone}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">Escolha o plano que deseja ativar para este cliente:</p>
