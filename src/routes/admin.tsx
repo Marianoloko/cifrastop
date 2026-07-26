@@ -1,3 +1,4 @@
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,23 @@ import { Label } from "@/components/ui/label";
 import { ShieldAlert, CheckCircle, Search, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-export default function AdminPage() {
+export const Route = createFileRoute("/admin")({
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Painel administrativo · CifraStop" },
+      { name: "description", content: "Área restrita para gerenciar assinaturas e acessos dos usuários do CifraStop." },
+      { property: "og:title", content: "Painel administrativo · CifraStop" },
+      { property: "og:description", content: "Área restrita de gestão de assinaturas do CifraStop." },
+      { name: "robots", content: "noindex" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: AdminPage,
+});
+
+function AdminPage() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [adminUser, setAdminUser] = useState("");
   const [adminPass, setAdminPass] = useState("");
@@ -33,22 +50,22 @@ export default function AdminPage() {
     setFoundUser(null);
 
     try {
-      // Busca usuário pela tabela de perfis/perfis de usuário
+      // Busca o usuário pelo telefone/WhatsApp cadastrado no perfil
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
-        .eq("email", searchEmail)
-        .single();
+        .select("id, phone, trial_started_at")
+        .eq("phone", searchEmail)
+        .maybeSingle();
 
       if (error || !data) {
         toast({
           variant: "destructive",
-          title: "E-mail não encontrado",
-          description: "Este e-mail ainda não possui cadastro no CifraStop.",
+          title: "Usuário não encontrado",
+          description: "Este telefone ainda não possui cadastro no CifraStop.",
         });
       } else {
         setFoundUser(data);
-        toast({ title: "Usuário encontrado!", description: `E-mail: ${data.email}` });
+        toast({ title: "Usuário encontrado!", description: `Telefone: ${data.phone}` });
       }
     } catch (err: any) {
       toast({ variant: "destructive", title: "Erro na busca", description: err.message });
@@ -65,19 +82,23 @@ export default function AdminPage() {
 
     try {
       const { error } = await supabase
-        .from("profiles")
-        .update({
-          subscription_ends_at: expirationDate.toISOString(),
-          plan_type: planName,
-        })
-        .eq("id", foundUser.id);
+        .from("subscriptions")
+        .upsert(
+          {
+            user_id: foundUser.id,
+            status: "active",
+            current_period_end: expirationDate.toISOString(),
+          },
+          { onConflict: "user_id" },
+        );
 
       if (error) throw error;
 
       toast({
         title: "Plano Ativado com Sucesso!",
-        description: `O ${planName} foi liberado para ${foundUser.email} até ${expirationDate.toLocaleDateString()}.`,
+        description: `O ${planName} foi liberado para ${foundUser.phone} até ${expirationDate.toLocaleDateString()}.`,
       });
+
     } catch (err: any) {
       toast({ variant: "destructive", title: "Erro ao ativar plano", description: err.message });
     }
@@ -119,12 +140,12 @@ export default function AdminPage() {
 
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle>Buscar Cliente por E-mail</CardTitle>
-          <CardDescription>Digite o e-mail do usuário cadastrado para liberar o acesso</CardDescription>
+          <CardTitle>Buscar Cliente por Telefone</CardTitle>
+          <CardDescription>Digite o telefone/WhatsApp informado no cadastro para liberar o acesso</CardDescription>
         </CardHeader>
         <CardContent className="flex gap-4">
           <Input
-            placeholder="cliente@email.com"
+            placeholder="(98) 98715-0431"
             value={searchEmail}
             onChange={(e) => setSearchEmail(e.target.value)}
           />
@@ -141,7 +162,7 @@ export default function AdminPage() {
             <CardTitle className="flex items-center gap-2">
               <UserCheck className="text-primary" /> Usuário Selecionado
             </CardTitle>
-            <CardDescription>{foundUser.email}</CardDescription>
+            <CardDescription>{foundUser.phone}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">Escolha o plano que deseja ativar para este cliente:</p>

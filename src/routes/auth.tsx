@@ -1,3 +1,4 @@
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +9,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Music, Lock, Mail, Phone, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-export default function AuthPage() {
+export const Route = createFileRoute("/auth")({
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Entrar ou criar conta · CifraStop" },
+      { name: "description", content: "Acesse o CifraStop ou crie sua conta e teste grátis por 2 horas: cifras, afinador, metrônomo e gravador." },
+      { property: "og:title", content: "Entrar ou criar conta · CifraStop" },
+      { property: "og:description", content: "Acesse o CifraStop ou crie sua conta e teste grátis por 2 horas." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: AuthPage,
+});
+
+function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
