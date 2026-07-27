@@ -20,6 +20,8 @@ export const Route = createFileRoute("/_authenticated/app")({
       { name: "description", content: "Repertório de cifras, transposição, afinador cromático, metrônomo, retorno de áudio ao vivo e gravador de ensaio." },
       { property: "og:title", content: "CifraVocal Pro" },
       { property: "og:description", content: "Cifras, afinador, metrônomo e retorno de áudio em um só app." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: HomeApp,
@@ -49,7 +51,7 @@ function HomeApp() {
   const handleSubscribe = () => alert("Pagamento em configuração. Em breve você poderá assinar por PIX ou Cartão.");
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    navigate({ to: "/auth" });
+    navigate({ to: "/auth", replace: true });
   };
 
   if (access.status === "loading") {

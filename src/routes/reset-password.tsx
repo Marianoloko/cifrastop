@@ -9,12 +9,16 @@ export const Route = createFileRoute("/reset-password")({
       { name: "description", content: "Recupere o acesso à sua conta CifraVocal Pro." },
       { property: "og:title", content: "Redefinir senha · CifraVocal Pro" },
       { property: "og:description", content: "Recupere o acesso à sua conta CifraVocal Pro." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
+  ssr: false,
   component: ResetPassword,
 });
 
 function ResetPassword() {
+  const navigate = Route.useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"request" | "update">("request");
@@ -47,7 +51,7 @@ function ResetPassword() {
     if (error) setError(error.message);
     else {
       setMessage("Senha atualizada! Você já pode entrar.");
-      setTimeout(() => { window.location.href = "/auth"; }, 1500);
+      window.setTimeout(() => { navigate({ to: "/auth", replace: true }); }, 1500);
     }
   };
 
