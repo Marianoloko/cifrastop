@@ -15,27 +15,16 @@ export function useAccess(): AccessState {
     queryKey: ["access"],
     queryFn: async () => {
       const { data: userData } = await supabase.auth.getUser();
-      const user = userData.user;
-      const uid = user?.id;
-      if (!uid || !user) return null;
+      const uid = userData.user?.id;
+      if (!uid) return null;
 
       const [profileRes, subRes] = await Promise.all([
-        supabase.from("profiles").select("trial_started_at,email,phone").eq("id", uid).maybeSingle(),
+        supabase.from("profiles").select("trial_started_at").eq("id", uid).maybeSingle(),
         supabase.from("subscriptions").select("status,current_period_end").eq("user_id", uid).maybeSingle(),
       ]);
 
-      let trialStartedAt = profileRes.data?.trial_started_at as string | undefined;
-      if (!trialStartedAt) {
-        const { data: createdProfile } = await supabase
-          .from("profiles")
-          .upsert({ id: uid, email: user.email ?? null, phone: typeof user.user_metadata?.phone === "string" ? user.user_metadata.phone : null }, { onConflict: "id" })
-          .select("trial_started_at")
-          .maybeSingle();
-        trialStartedAt = createdProfile?.trial_started_at;
-      }
-
       return {
-        trialStartedAt,
+        trialStartedAt: profileRes.data?.trial_started_at as string | undefined,
         subscription: subRes.data as { status: string; current_period_end: string | null } | null,
       };
     },
