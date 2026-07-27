@@ -1,65 +1,83 @@
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { ShieldAlert, Search, UserCheck, KeyRound } from "lucide-react";
+import { Search, UserCheck, KeyRound } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { activateAdminCustomerPlan, getAdminStatus, searchAdminCustomer, signInAdmin, signOutAdmin } from "@/lib/admin.functions";
 
-export default function AdminPage() {
+type FoundCustomer = { id: string; email: string | null; phone: string | null } | null;
+
+export const Route = createFileRoute("/admin")({
+  head: () => ({
+    meta: [
+      { title: "Painel administrativo · CifraStop" },
+      { name: "description", content: "Área restrita para liberar assinaturas CifraStop." },
+      { property: "og:title", content: "Painel administrativo · CifraStop" },
+      { property: "og:description", content: "Área restrita para liberar assinaturas CifraStop." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
+  component: AdminPage,
+  ssr: false,
+});
+
+function AdminPage() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
-  const [adminUser, setAdminUser] = useState("");
   const [adminPass, setAdminPass] = useState("");
-
-  const [searchEmail, setSearchEmail] = useState("");
-  const [foundUser, setFoundUser] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [foundUser, setFoundUser] = useState<FoundCustomer>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const getStatus = useServerFn(getAdminStatus);
+  const loginAdmin = useServerFn(signInAdmin);
+  const logoutAdmin = useServerFn(signOutAdmin);
+  const searchCustomer = useServerFn(searchAdminCustomer);
+  const activatePlan = useServerFn(activateAdminCustomerPlan);
 
-  // Hash/Validação Segura da Senha (A nova senha é: CifraAdmin2026!#Stop)
-  const handleAdminLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    getStatus().then((status) => setIsAdminLoggedIn(status.unlocked)).catch(() => setIsAdminLoggedIn(false));
+  }, [getStatus]);
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Verificação protegida
-    const isValidUser = adminUser.trim().toLowerCase() === "admin@cifrastop.com";
-    const isValidPass = adminPass === "CifraAdmin2026!#Stop";
-
-    if (isValidUser && isValidPass) {
-      setIsAdminLoggedIn(true);
-      toast({ title: "Acesso autorizado", description: "Painel de administração liberado." });
-    } else {
-      toast({ variant: "destructive", title: "Acesso Negado", description: "Credenciais de administrador incorretas." });
+    setLoading(true);
+    try {
+      const result = await loginAdmin({ data: { password: adminPass } });
+      if (!result.ok) {
+        toast({ variant: "destructive", title: "Acesso negado", description: "Senha administrativa incorreta." });
+        return;
+      }
+      setIsAdminLoggedIn(true); setAdminPass("");
+      toast({ title: "Acesso autorizado", description: "Painel liberado." });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Não foi possível acessar o painel.";
+      toast({ variant: "destructive", title: "Erro no painel", description: message });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSearchEmail = async () => {
-    if (!searchEmail) return;
+  const handleSearchCustomer = async () => {
+    if (!searchTerm.trim()) return;
     setLoading(true);
     setFoundUser(null);
-
     try {
-      // Busca segura no banco de dados do Supabase
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .ilike("email", searchEmail.trim())
-        .maybeSingle();
-
-      if (error) throw error;
-
+      const data = await searchCustomer({ data: { search: searchTerm.trim() } });
       if (!data) {
-        toast({
-          variant: "destructive",
-          title: "E-mail não localizado",
-          description: "Este e-mail ainda não criou conta no aplicativo.",
-        });
+        toast({ variant: "destructive", title: "Cliente não localizado", description: "Busque pelo e-mail ou WhatsApp do cadastro." });
       } else {
         setFoundUser(data);
-        toast({ title: "Usuário localizado!", description: `E-mail: ${data.email}` });
+        toast({ title: "Cliente localizado", description: data.email ?? data.phone ?? "Cadastro encontrado" });
       }
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "Erro na consulta", description: err.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Não foi possível buscar o cliente.";
+      toast({ variant: "destructive", title: "Erro na consulta", description: message });
     } finally {
       setLoading(false);
     }
@@ -72,23 +90,18 @@ export default function AdminPage() {
     expirationDate.setDate(expirationDate.getDate() + days);
 
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          subscription_ends_at: expirationDate.toISOString(),
-          plan_type: planName,
-        })
-        .eq("id", foundUser.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Acesso Liberado!",
-        description: `O ${planName} foi ativado com sucesso para ${foundUser.email}.`,
-      });
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "Erro ao ativar", description: err.message });
+      await activatePlan({ data: { userId: foundUser.id, days, planName } });
+      toast({ title: "Acesso liberado", description: `${planName} ativado até ${expirationDate.toLocaleDateString("pt-BR")}.` });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Não foi possível ativar o plano.";
+      toast({ variant: "destructive", title: "Erro ao ativar", description: message });
     }
+  };
+
+  const handleSignOut = async () => {
+    await logoutAdmin();
+    setIsAdminLoggedIn(false);
+    setFoundUser(null);
   };
 
   if (!isAdminLoggedIn) {
@@ -103,16 +116,7 @@ export default function AdminPage() {
           <CardContent>
             <form onSubmit={handleAdminLogin} className="space-y-4">
               <div>
-                <Label>Usuário Admin</Label>
-                <Input 
-                  placeholder="admin@cifrastop.com" 
-                  value={adminUser} 
-                  onChange={(e) => setAdminUser(e.target.value)} 
-                  required 
-                />
-              </div>
-              <div>
-                <Label>Senha Protegida</Label>
+                <Label>Senha do painel</Label>
                 <Input 
                   type="password" 
                   placeholder="••••••••••••" 
@@ -121,8 +125,8 @@ export default function AdminPage() {
                   required 
                 />
               </div>
-              <Button type="submit" className="w-full py-5 text-base font-bold">
-                Acessar Painel
+              <Button type="submit" className="w-full py-5 text-base font-bold" disabled={loading}>
+                {loading ? "Validando..." : "Acessar Painel"}
               </Button>
             </form>
           </CardContent>
@@ -135,21 +139,21 @@ export default function AdminPage() {
     <div className="min-h-screen bg-background p-6 max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-8 border-b pb-4">
         <h1 className="text-2xl font-bold">Painel de Ativação de Clientes</h1>
-        <Button variant="outline" onClick={() => setIsAdminLoggedIn(false)}>Encerrar Sessão</Button>
+        <Button variant="outline" onClick={handleSignOut}>Encerrar Sessão</Button>
       </div>
 
       <Card className="mb-8">
         <CardHeader>
           <CardTitle>Pesquisar Cliente</CardTitle>
-          <CardDescription>Digite o e-mail informado pelo cliente no WhatsApp para liberar a licença</CardDescription>
+          <CardDescription>Digite o e-mail ou WhatsApp informado pelo cliente para liberar a licença</CardDescription>
         </CardHeader>
         <CardContent className="flex gap-4">
           <Input
-            placeholder="cliente@email.com"
-            value={searchEmail}
-            onChange={(e) => setSearchEmail(e.target.value)}
+            placeholder="cliente@email.com ou WhatsApp"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <Button onClick={handleSearchEmail} disabled={loading}>
+          <Button onClick={handleSearchCustomer} disabled={loading}>
             <Search className="w-4 h-4 mr-2" />
             {loading ? "Buscando..." : "Buscar Cliente"}
           </Button>
@@ -162,7 +166,7 @@ export default function AdminPage() {
             <CardTitle className="flex items-center gap-2">
               <UserCheck className="text-primary" /> Cliente Encontrado
             </CardTitle>
-            <CardDescription className="text-foreground font-semibold">{foundUser.email}</CardDescription>
+            <CardDescription className="text-foreground font-semibold">{foundUser.email ?? "Sem e-mail salvo"} {foundUser.phone ? `· ${foundUser.phone}` : ""}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground font-medium">Clique no plano pago para liberar o acesso:</p>
@@ -173,7 +177,7 @@ export default function AdminPage() {
               <Button variant="secondary" onClick={() => handleActivatePlan(90, "Plano Diferenciado (90 dias)")}>
                 Ativar Diferenciado (90 dias)
               </Button>
-              <Button className="bg-green-600 hover:bg-green-700 text-white font-bold" onClick={() => handleActivatePlan(365, "Plano Anual (R$ 120)")}>
+              <Button onClick={() => handleActivatePlan(365, "Plano Anual (R$ 120)")}>
                 Ativar Anual (365 dias)
               </Button>
             </div>
