@@ -231,7 +231,7 @@ function PlansManager() {
     setDrafts((d) => d.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
 
   const save = async (draft: Draft) => {
-    let rules: Record<string, unknown> = {};
+    let rules: unknown = {};
     try {
       rules = draft.rulesText.trim() ? JSON.parse(draft.rulesText) : {};
     } catch {
@@ -248,7 +248,7 @@ function PlansManager() {
       featured: draft.featured,
       whatsapp_message: draft.whatsapp_message,
       features: draft.featuresText.split("\n").map((s) => s.trim()).filter(Boolean),
-      rules,
+      rules: rules as never,
       active: draft.active,
       sort_order: Number(draft.sort_order) || 0,
     };
