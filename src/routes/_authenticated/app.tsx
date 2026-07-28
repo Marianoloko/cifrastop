@@ -11,6 +11,7 @@ import { TrialBanner } from "@/components/music/TrialBanner";
 import { Paywall } from "@/components/music/Paywall";
 import { useAccess } from "@/hooks/useAccess";
 import { supabase } from "@/integrations/supabase/client";
+import { openWhatsApp } from "@/lib/plans";
 import { readLegacySongs, importLegacyToCloud } from "@/lib/music/store";
 
 export const Route = createFileRoute("/_authenticated/app")({
@@ -46,7 +47,8 @@ function HomeApp() {
     if (legacy.length > 0) setShowImport(true);
   }, []);
 
-  const handleSubscribe = () => alert("Pagamento em configuração. Em breve você poderá assinar por PIX ou Cartão.");
+  const handleSubscribe = () =>
+    openWhatsApp("Olá! Gostaria de assinar o CifraStop e liberar meu acesso completo.");
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate({ to: "/auth" });

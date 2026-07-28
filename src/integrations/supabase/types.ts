@@ -14,9 +14,64 @@ export type Database = {
   }
   public: {
     Tables: {
+      plans: {
+        Row: {
+          active: boolean
+          badge: string | null
+          created_at: string
+          description: string
+          duration_days: number
+          featured: boolean
+          features: Json
+          id: string
+          name: string
+          period_label: string
+          price_label: string
+          rules: Json
+          sort_order: number
+          updated_at: string
+          whatsapp_message: string
+        }
+        Insert: {
+          active?: boolean
+          badge?: string | null
+          created_at?: string
+          description?: string
+          duration_days?: number
+          featured?: boolean
+          features?: Json
+          id?: string
+          name: string
+          period_label?: string
+          price_label?: string
+          rules?: Json
+          sort_order?: number
+          updated_at?: string
+          whatsapp_message?: string
+        }
+        Update: {
+          active?: boolean
+          badge?: string | null
+          created_at?: string
+          description?: string
+          duration_days?: number
+          featured?: boolean
+          features?: Json
+          id?: string
+          name?: string
+          period_label?: string
+          price_label?: string
+          rules?: Json
+          sort_order?: number
+          updated_at?: string
+          whatsapp_message?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
+          email: string | null
           id: string
           phone: string | null
           trial_started_at: string
@@ -24,6 +79,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          email?: string | null
           id: string
           phone?: string | null
           trial_started_at?: string
@@ -31,6 +87,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          email?: string | null
           id?: string
           phone?: string | null
           trial_started_at?: string
