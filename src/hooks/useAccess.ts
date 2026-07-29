@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const TRIAL_MS = 2 * 60 * 60 * 1000; // 2 hours
+const TRIAL_MS = 4 * 60 * 60 * 1000; // 4 hours
 
 export type AccessState =
   | { status: "loading" }

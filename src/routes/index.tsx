@@ -73,12 +73,12 @@ function Landing() {
           </h1>
           <p className="mt-5 text-lg text-muted-foreground">
             Cifras com transposição e rolagem automática, afinador, metrônomo, retorno de áudio ao vivo e gravador de
-            ensaio. Teste grátis por 2 horas.
+            ensaio. Teste grátis por 4 horas.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
             <Link to="/auth">
               <Button size="lg" className="w-full sm:w-auto text-base py-6 px-8">
-                Criar conta e testar grátis por 2 horas
+                Criar conta e testar grátis por 4 horas
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
