@@ -14,9 +14,9 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Entrar ou criar conta · CifraStop" },
-      { name: "description", content: "Acesse o CifraStop ou crie sua conta e teste grátis por 2 horas: cifras, afinador, metrônomo e gravador." },
+      { name: "description", content: "Acesse o CifraStop ou crie sua conta e teste grátis por 4 horas: cifras, afinador, metrônomo e gravador." },
       { property: "og:title", content: "Entrar ou criar conta · CifraStop" },
-      { property: "og:description", content: "Acesse o CifraStop ou crie sua conta e teste grátis por 2 horas." },
+      { property: "og:description", content: "Acesse o CifraStop ou crie sua conta e teste grátis por 4 horas." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -47,7 +47,7 @@ function AuthPage() {
         toast({ title: "Bem-vindo de volta!", description: "Login realizado com sucesso." });
         navigate({ to: "/app" });
       } else {
-        // Cadastro com teste de 2 horas
+        // Cadastro com teste de 4 horas
         const trialEndDate = new Date();
         trialEndDate.setHours(trialEndDate.getHours() + 2);
 
@@ -67,7 +67,7 @@ function AuthPage() {
 
         toast({
           title: "Conta criada com sucesso!",
-          description: "Você ganhou 2 horas de teste grátis no CifraStop.",
+          description: "Você ganhou 4 horas de teste grátis no CifraStop.",
         });
         navigate({ to: "/app" });
       }
@@ -97,7 +97,7 @@ function AuthPage() {
           <CardDescription>
             {isLogin
               ? "Entre com seu e-mail e senha para continuar"
-              : "Cadastre-se para experimentar 2 horas de acesso gratuito!"}
+              : "Cadastre-se para experimentar 4 horas de acesso gratuito!"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -153,7 +153,7 @@ function AuthPage() {
             )}
 
             <Button type="submit" className="w-full text-base py-5" disabled={loading}>
-              {loading ? "Aguarde..." : isLogin ? "Entrar" : "Iniciar Teste Grátis (2 horas)"}
+              {loading ? "Aguarde..." : isLogin ? "Entrar" : "Iniciar Teste Grátis (4 horas)"}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </form>
